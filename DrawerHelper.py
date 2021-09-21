@@ -25,6 +25,9 @@ class DrawerHelper:
     def draw_line(self, color, pos_1, pos_2, width=1):
         pygame.draw.line(self.windowSurface, color, pos_1, pos_2, width)
 
+    def draw_point(self, color, pos, width=1):
+        pygame.draw.line(self.windowSurface, color, pos, pos, width)
+
     def draw_rect(self, color, rect):
         pygame.draw.rect(self.windowSurface, color, rect)
 
