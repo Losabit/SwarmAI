@@ -4,7 +4,7 @@ from DrawerHelper import *
 class AntColonyOptimization:
 
     def __init__(self):
-        self.dHelper = DrawerHelper("AntColonyOptimization Example", 200, 200)
+        self.dHelper = DrawerHelper("AntColonyOptimization Example", 500, 500)
 
     def update(self):
         # run the game loop
