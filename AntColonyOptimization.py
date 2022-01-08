@@ -365,11 +365,11 @@ class Ant:
             self.move(newDir)
 
             if matrix[self.x][self.y] == "food":
-                leetStr = ""
+                antStr = "Ant:"
                 if self.leet:
-                    leetStr = "Elite Ant"
-                print("Ant: ", self.id, " found ", "%#3d" % foodAmounts[foodList.index([self.x, self.y])],
-                      "Food: ", self.x, self.y, "%#10f" % self.l0, " steps ", leetStr)
+                    antStr = "Elite Ant:"
+                print(antStr, self.id, " found", "%#3d" % foodAmounts[foodList.index([self.x, self.y])],
+                      "food units at coordinate :", self.x, self.y, "in", "%#10f" % self.l0, "steps")
                 self.putPheromone = True
 
                 if initialFoodAmount != 0:
@@ -377,7 +377,7 @@ class Ant:
                     if foodAmounts[foodList.index([self.x, self.y])] == 0:
                         matrix[self.x][self.y] = initPheromone
                         self.putPheromone = False
-                        print("Food: ", self.x, self.y, ", pheromones remained.")
+                        print("The food at : ", self.x, self.y, " is finished but the pheromones remains.")
 
         else:  # if putFeromone
             self.tabooListIndex += 1
@@ -410,7 +410,7 @@ def main():
         ant_colony.globalEvaporate()
         ant_colony.inc()
         if ant_colony.noFood():
-            print("Ants have eaten all the found in : ", iterations, " iterations.")
+            print("Ants have eaten all the food in : ", iterations, " iterations.")
     pg.quit()
 
 
