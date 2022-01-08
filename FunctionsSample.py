@@ -1,6 +1,7 @@
 from DrawerHelper import *
 import math
 
+
 class Functions2D:
     @staticmethod
     def linear_then_const(x):
@@ -15,6 +16,11 @@ class Functions2D:
             return center_in - (x[0] - center_in)
         else:
             return x[0]
+
+    @staticmethod
+    def sin_max_in(x, max_in=100):
+        coeff = 100
+        return math.sin(x[0] / 100) * coeff
 
     @staticmethod
     def draw_function(function, x_min=-200, x_max=200):
@@ -56,6 +62,16 @@ class Functions3D:
             return 255, 255, 0
         else:
             return 0, 255, 0
+
+    @staticmethod
+    def get_function_points(function, x=(-200, 200), y=(-200, 200)):
+        x_res = []
+        y_res = []
+        for x_value in range(x[0], x[1]):
+            for y_value in range(y[0], y[1]):
+                x_res.append([x_value, y_value])
+                y_res.append(function([x_value, y_value]))
+        return x_res, y_res
 
     @staticmethod
     def draw_function(function, min_values=(-200, -200), max_values=(200, 200)):
