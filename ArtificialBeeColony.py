@@ -1,12 +1,15 @@
-import imageio
 import random
+
+import imageio
 import matplotlib.pyplot as plt
+
+from resources.abc.utils.function import set_born_value, max_value_index, set_rand_pos
 
 Workers = 50
 Scouts = 10
 All_bees = Workers + Scouts
 limit = 10
-iter = 30
+iter = 50
 pos_list = []
 fitness_list = []
 limit_list = []
@@ -15,19 +18,9 @@ filenames = []
 nbf = 0
 
 
-def max_value_index(l):
-    max = l[0]
-    index = 0
-    for i in range(len(l)):
-        if l[i] > max:
-            max = l[i]
-            index = i
-    return index
-
-
 for i in range(All_bees):
-    pos_x = 500 * (random.random() - 0.5)
-    pos_y = 500 * (random.random() - 0.5)
+    pos_x = set_rand_pos()
+    pos_y = set_rand_pos()
     pos_list.append({"x": pos_x, "y": pos_y})
     fitness = pos_y - pos_x ** 2
     fitness_list.append(fitness)
@@ -45,14 +38,8 @@ for it in range(iter):
             nindex = random.randint(0, All_bees - 1)
         tmp_x = pos_list[i]["x"] + 2 * (random.random() - 0.5) * (pos_list[nindex]["x"] - pos_list[i]["x"])
         tmp_y = pos_list[i]["y"] + 2 * (random.random() - 0.5) * (pos_list[nindex]["y"] - pos_list[i]["y"])
-        if tmp_x > 250:
-            tmp_x = 250
-        if tmp_x < -250:
-            tmp_x = -250
-        if tmp_y > 250:
-            tmp_y = 250
-        if tmp_y < -250:
-            tmp_y = -250
+        tmp_x = set_born_value(tmp_x)
+        tmp_y = set_born_value(tmp_y)
         tmp_fit = tmp_y - tmp_x ** 2
 
         if tmp_fit > fitness_list[i]:
@@ -64,14 +51,13 @@ for it in range(iter):
             limit_list[i] = limit_list[i] + 1
         if limit_list[i] > limit:
             # New pos
-            tmp_pos_x = 500 * (random.random() - 0.5)
-            tmp_pos_y = 500 * (random.random() - 0.5)
+            tmp_pos_x = set_rand_pos()
+            tmp_pos_y = set_rand_pos()
             pos_list[i] = {"x": tmp_x, "y": tmp_y}
-        # Print ici
 
         for i in range(Workers, All_bees):
-            pos_x = 500 * (random.random() - 0.5)
-            pos_y = 500 * (random.random() - 0.5)
+            pos_x = set_rand_pos()
+            pos_y = set_rand_pos()
             pos_list[i] = {"x": pos_x, "y": pos_y}
 
             fitness_list[i] = pos_y - pos_x ** 2
@@ -99,19 +85,12 @@ for it in range(iter):
 
     plt.scatter(workers_x, workers_y,c="red")
     plt.scatter(scoot_x, scoot_y,c="aqua")
-    plt.show()
+    # plt.show()
     plt.savefig('resources/abc/plot/' + str(i) + '_' + str(nbf) + '.png')
     plt.close()
     filenames.append('resources/abc/plot/' + str(i) + '_' + str(nbf) + '.png')
     nbf += 1
-print("la")
-print(best_fitness)
-# x = range(iter*30)
-# print(x)
-# print(opt_fitness)
-# plt.plot(x, opt_fitness)
-# plt.show()
-print("ici")
+
 
 with imageio.get_writer('resources/abc/gif/movie.gif', mode='I') as writer:
     for filename in filenames:
