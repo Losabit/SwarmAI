@@ -10,11 +10,11 @@ initPheromone = 1.0  # Pheromone init value
 
 # Food Variables
 foodList = []
-numFood = 30  # Amount of food
+numFood = 1  # Amount of food
 minFoodDistance = 20
 maxFoodDistance = 100
 foodAmounts = []
-initialFoodAmount = 50
+initialFoodAmount = 1
 
 # Number of obstacles
 numObstacles = 4000
@@ -139,13 +139,14 @@ class Colony:
                 print("Ant: ", "%#10d" % leetCandidate.id, " became an elite !")
 
     # Moving & drawing the ants
-    def drawAndMoveAnts(self):
+    def drawAndMoveAnts(self, should_draw=True):
         for ant in ants:
             ant.turn()
-            if not ant.leet:
-                dHelper.blit(dHelper.BLACK, 70, ant.x, ant.y, scale)
-            else:
-                dHelper.blit(dHelper.TEAL, 127, ant.x, ant.y, scale)
+            if should_draw:
+                if not ant.leet:
+                    dHelper.blit(dHelper.BLACK, 70, ant.x, ant.y, scale)
+                else:
+                    dHelper.blit(dHelper.TEAL, 127, ant.x, ant.y, scale)
 
     # Global evaporation of pheromones
     def globalEvaporate(self):
@@ -410,7 +411,7 @@ def main():
         ant_colony.globalEvaporate()
         ant_colony.inc()
         if ant_colony.noFood():
-            print("Ants have eaten all the food in : ", iterations, " iterations.")
+            print("Ants have eaten all the food in : ", iterations, "iterations.")
     pg.quit()
 
 
