@@ -10,9 +10,9 @@ initPheromone = 1.0  # Pheromone init value
 
 # Food Variables
 foodList = []
-numFood = 1  # Amount of food
+numFood = 5  # Amount of food
 minFoodDistance = 20
-maxFoodDistance = 100
+maxFoodDistance = 25
 foodAmounts = []
 initialFoodAmount = 1
 
@@ -36,8 +36,8 @@ iterations = 0
 
 
 class Colony:
-    def __init__(self):
-        pass
+    def __init__(self, shouldPrint=True):
+        self.shouldPrint = shouldPrint
 
     # Field initialization
     def initField(self):
@@ -128,7 +128,7 @@ class Colony:
         numLeet = int(eliteAntsPercentage / 100 * numAnts)  # Number of elite ants
 
         for i in range(numAnts):
-            ants.append(Ant(spawnX, spawnY, False))
+            ants.append(Ant(spawnX, spawnY, False, self.shouldPrint))
 
         # Election of elite ants
         while numLeet > 0:
@@ -136,7 +136,8 @@ class Colony:
             if not leetCandidate.leet:
                 leetCandidate.leet = True
                 numLeet -= 1
-                print("Ant: ", "%#10d" % leetCandidate.id, " became an elite !")
+                if self.shouldPrint:
+                    print("Ant: ", "%#10d" % leetCandidate.id, " became an elite !")
 
     # Moving & drawing the ants
     def drawAndMoveAnts(self, should_draw=True):
@@ -173,7 +174,7 @@ class Ant:
     global spawnX
     global spawnY
 
-    def __init__(self, x, y, leet):
+    def __init__(self, x, y, leet, shouldPrint):
         self.x = x
         self.y = y
         self.tabooList = []
@@ -182,6 +183,7 @@ class Ant:
         self.tabooListIndex = 0
         self.leet = leet
         self.id = r.randint(10000000, 99999999)
+        self.shouldPrint = shouldPrint
 
     def move(self, dir):
         if [self.x, self.y] not in self.tabooList:
@@ -294,7 +296,8 @@ class Ant:
         self.putPheromone = False
         self.tabooListIndex = 0
         self.l0 = 0
-        print("Ant: ", self.id, " respawned !")
+        if self.shouldPrint:
+            print("Ant: ", self.id, " respawned !")
 
     # Choose next point of interest and move there
     def turn(self):
@@ -369,8 +372,9 @@ class Ant:
                 antStr = "Ant:"
                 if self.leet:
                     antStr = "Elite Ant:"
-                print(antStr, self.id, " found", "%#3d" % foodAmounts[foodList.index([self.x, self.y])],
-                      "food units at coordinate :", self.x, self.y, "in", "%#10f" % self.l0, "steps")
+                if self.shouldPrint:
+                    print(antStr, self.id, " found", "%#3d" % foodAmounts[foodList.index([self.x, self.y])],
+                          "food units at coordinate :", self.x, self.y, "in", "%#10f" % self.l0, "steps")
                 self.putPheromone = True
 
                 if initialFoodAmount != 0:
@@ -378,7 +382,8 @@ class Ant:
                     if foodAmounts[foodList.index([self.x, self.y])] == 0:
                         matrix[self.x][self.y] = initPheromone
                         self.putPheromone = False
-                        print("The food at : ", self.x, self.y, " is finished but the pheromones remains.")
+                        if self.shouldPrint:
+                            print("The food at : ", self.x, self.y, " is finished but the pheromones remains.")
 
         else:  # if putFeromone
             self.tabooListIndex += 1
@@ -395,7 +400,8 @@ class Ant:
 
 
 def main():
-    ant_colony = Colony()
+    shouldPrint = True
+    ant_colony = Colony(shouldPrint)
     ant_colony.initField()
     ant_colony.createAnts()
 
@@ -411,7 +417,9 @@ def main():
         ant_colony.globalEvaporate()
         ant_colony.inc()
         if ant_colony.noFood():
-            print("Ants have eaten all the food in : ", iterations, "iterations.")
+            if shouldPrint:
+                print("Ants have eaten all the food in : ", iterations, "iterations.")
+            running = False
     pg.quit()
 
 
