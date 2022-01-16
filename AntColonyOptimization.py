@@ -34,84 +34,160 @@ matrix = []
 spawnX, spawnY = 0, 0
 iterations = 0
 
-
 class Colony:
-    def __init__(self):
-        pass
+
+    def __init__(self, shouldPrint=True,
+                 numFood=5,
+                 minFoodDistance=20,
+                 maxFoodDistance=25):
+        self.shouldPrint = shouldPrint
+        self.numFood = numFood  # Amount of food
+        self.minFoodDistance = minFoodDistance
+        self.maxFoodDistance = maxFoodDistance
+
+        self.scale = 6
+        self.numAnts = 1000  # Number of Ants
+        self.eliteAntsPercentage = 5  # Percentage of elite Ants
+        self.initPheromone = 1.0  # Pheromone init value
+
+        # Food Variables
+        self.foodList = []
+        self.foodAmounts = []
+        self.initialFoodAmount = 1
+
+        # Number of obstacles
+        self.numObstacles = 4000
+        self.freeSpace = 3  # Free space left around food & spawn
+
+        # Algorith parameters
+        self.alpha = 3  # Impact of pheromones
+        self.beta = 3  # Impact of the distance
+        self.q = 100  # Multiplier of the distance traveled
+        self.p = 0.0003  # local evaporation rate of pheromones
+        self.gp = 0.0007  # global evaporation rate of pheromones
+
+        self.dHelper = DrawerHelper("AntColonyOptimization Example", int(100 * self.scale), int(100 * self.scale))
+        self.clock = pg.time.Clock()
+        self.ants = []
+        self.matrix = []
+        self.spawnX, spawnY = 0, 0
+        self.iterations = 0
+
+    def __del__(self):
+        del self.matrix
+        del self.ants
+        del self.clock
+        del self.dHelper
+
+    def getIterations(self):
+        return self.iterations
+
+    def getClock(self):
+        return self.clock
+
+    def getMatrix(self):
+        return self.matrix
+
+    def getInitPheromone(self):
+        return self.initPheromone
+
+    def getAlpha(self):
+        return self.alpha
+
+    def getBeta(self):
+        return self.beta
+
+    def getFoodAmounts(self):
+        return self.foodAmounts
+
+    def getFoodList(self):
+        return self.foodList
+
+    def getInitialFoodAmount(self):
+        return self.initialFoodAmount
+
+    def getP(self):
+        return self.p
+
+    def getQ(self):
+        return self.q
+
+    def getSpawn(self):
+        return self.spawnX, self.spawnY
 
     # Field initialization
     def initField(self):
         for i in range(100):
-            matrix.append([])
+            self.matrix.append([])
             for j in range(100):
-                matrix[i].append(initPheromone)
-        global spawnX
-        global spawnY
-        spawnX = r.randint(0, 99)
-        spawnY = r.randint(0, 99)
-        matrix[spawnX][spawnY] = "spawn"
+                self.matrix[i].append(self.initPheromone)
+        self.spawnX = r.randint(0, 99)
+        self.spawnY = r.randint(0, 99)
+        self.matrix[self.spawnX][self.spawnY] = "spawn"
 
-        global foodList
-        for i in range(numFood):
+        for i in range(self.numFood):
             putFoodSuccess = False
             while not putFoodSuccess:
                 foodX = r.randint(5, 94)
                 foodY = r.randint(5, 94)
-                foodXSuccess = (abs(foodX - spawnX) in range(minFoodDistance, maxFoodDistance)) and (
-                        abs(foodY - spawnY) in range(0, maxFoodDistance))
-                foodYSuccess = (abs(foodY - spawnY) in range(minFoodDistance, maxFoodDistance)) and (
-                        abs(foodX - spawnX) in range(0, maxFoodDistance))
+                foodXSuccess = (abs(foodX - self.spawnX) in range(self.minFoodDistance, self.maxFoodDistance)) and (
+                        abs(foodY - self.spawnY) in range(0, self.maxFoodDistance))
+                foodYSuccess = (abs(foodY - self.spawnY) in range(self.minFoodDistance, self.maxFoodDistance)) and (
+                        abs(foodX - self.spawnX) in range(0, self.maxFoodDistance))
                 if foodXSuccess or foodYSuccess:
-                    if [foodX, foodY] not in foodList:
-                        foodList.append([foodX, foodY])
-                        foodAmounts.append(initialFoodAmount)
-                        matrix[foodX][foodY] = "food"
+                    if [foodX, foodY] not in self.foodList:
+                        self.foodList.append([foodX, foodY])
+                        self.foodAmounts.append(self.initialFoodAmount)
+                        self.matrix[foodX][foodY] = "food"
                         putFoodSuccess = True
 
-        for i in range(numObstacles):
+        for i in range(self.numObstacles):
             putObstacleSuccess = 0
-            while putObstacleSuccess < numFood + 1:  # количество еды + точка спавна
+            while putObstacleSuccess < self.numFood + 1:  # количество еды + точка спавна
                 obstacleX = r.randint(0, 99)
                 obstacleY = r.randint(0, 99)
-                if not ((matrix[obstacleX][obstacleY] == "obstacle") and (matrix[obstacleX][obstacleY] == "food") and (
-                        matrix[obstacleX][obstacleY] == "spawn")):
-                    spawnXSuccess = (obstacleX <= spawnX - freeSpace) or (obstacleX >= spawnX + freeSpace)
-                    spawnYSuccess = (obstacleY <= spawnY - freeSpace) or (obstacleY >= spawnY + freeSpace)
+                if not ((self.matrix[obstacleX][obstacleY] == "obstacle") and (
+                        self.matrix[obstacleX][obstacleY] == "food") and (
+                                self.matrix[obstacleX][obstacleY] == "spawn")):
+                    spawnXSuccess = (obstacleX <= self.spawnX - self.freeSpace) or (
+                            obstacleX >= self.spawnX + self.freeSpace)
+                    spawnYSuccess = (obstacleY <= self.spawnY - self.freeSpace) or (
+                            obstacleY >= self.spawnY + self.freeSpace)
                     if spawnXSuccess or spawnYSuccess:
                         putObstacleSuccess += 1
                     else:
                         putObstacleSuccess = 0
                         continue
-                    for i in range(numFood):
-                        foodX = foodList[i][0]
-                        foodY = foodList[i][1]
-                        foodXSuccess = (obstacleX <= foodX - freeSpace) or (obstacleX >= foodX + freeSpace)
-                        foodYSuccess = (obstacleY <= foodY - freeSpace) or (obstacleY >= foodY + freeSpace)
+                    for i in range(self.numFood):
+                        foodX = self.foodList[i][0]
+                        foodY = self.foodList[i][1]
+                        foodXSuccess = (obstacleX <= foodX - self.freeSpace) or (obstacleX >= foodX + self.freeSpace)
+                        foodYSuccess = (obstacleY <= foodY - self.freeSpace) or (obstacleY >= foodY + self.freeSpace)
                         if foodXSuccess or foodYSuccess:
                             putObstacleSuccess += 1
                         else:
                             putObstacleSuccess = 0
                             continue
-            matrix[obstacleX][obstacleY] = "obstacle"
+            self.matrix[obstacleX][obstacleY] = "obstacle"
 
-    # отрисовка поля
+    # Draw field
     def drawField(self):
-        dHelper.draw_background(dHelper.WHITE)
+        self.dHelper.draw_background(self.dHelper.WHITE)
         for i in range(100):
             for j in range(100):
-                if matrix[i][j] == "spawn":
-                    dHelper.blit(dHelper.BLUE, 255, i, j, scale)
-                elif matrix[i][j] == "food":
-                    if initialFoodAmount > 0:
-                        foodAlpha = foodAmounts[foodList.index([i, j])] / initialFoodAmount * 200 + 55
+                if self.matrix[i][j] == "spawn":
+                    self.dHelper.blit(self.dHelper.BLUE, 255, i, j, self.scale)
+                elif self.matrix[i][j] == "food":
+                    if self.initialFoodAmount > 0:
+                        foodAlpha = self.foodAmounts[self.foodList.index([i, j])] / self.initialFoodAmount * 200 + 55
                     else:
                         foodAlpha = 255
-                    dHelper.blit(dHelper.RED, foodAlpha, i, j, scale)
+                    self.dHelper.blit(self.dHelper.RED, foodAlpha, i, j, self.scale)
 
-                elif matrix[i][j] == "obstacle":
-                    dHelper.blit(dHelper.BLACK, 20, i, j, scale)
+                elif self.matrix[i][j] == "obstacle":
+                    self.dHelper.blit(self.dHelper.BLACK, 20, i, j, self.scale)
                 else:
-                    pheromoneGray = 255 - (matrix[i][j] - initPheromone) * 1.4
+                    pheromoneGray = 255 - (self.matrix[i][j] - self.initPheromone) * 1.4
                     pheromoneGreen = 2 * pheromoneGray
                     if pheromoneGray > 255:
                         pheromoneGray = 255
@@ -121,43 +197,47 @@ class Colony:
                         pheromoneGreen = 255
                     if pheromoneGreen < 50:
                         pheromoneGreen = 50
-                    dHelper.blit((pheromoneGray, pheromoneGreen, pheromoneGray), 255, i, j, scale)
+                    self.dHelper.blit((pheromoneGray, pheromoneGreen, pheromoneGray), 255, i, j, self.scale)
 
     # Ants initialisation
     def createAnts(self):
-        numLeet = int(eliteAntsPercentage / 100 * numAnts)  # Number of elite ants
+        numLeet = int(self.eliteAntsPercentage / 100 * self.numAnts)  # Number of elite ants
 
-        for i in range(numAnts):
-            ants.append(Ant(spawnX, spawnY, False))
+        for i in range(self.numAnts):
+            self.ants.append(Ant(self.spawnX,
+                                 self.spawnY,
+                                 False,
+                                 self.shouldPrint))
 
         # Election of elite ants
         while numLeet > 0:
-            leetCandidate = r.choice(ants)
+            leetCandidate = r.choice(self.ants)
             if not leetCandidate.leet:
                 leetCandidate.leet = True
                 numLeet -= 1
-                print("Ant: ", "%#10d" % leetCandidate.id, " became an elite !")
+                if self.shouldPrint:
+                    print("Ant: ", "%#10d" % leetCandidate.id, " became an elite !")
 
     # Moving & drawing the ants
     def drawAndMoveAnts(self, should_draw=True):
-        for ant in ants:
-            ant.turn()
+        for ant in self.ants:
+            ant.turn(self)
             if should_draw:
                 if not ant.leet:
-                    dHelper.blit(dHelper.BLACK, 70, ant.x, ant.y, scale)
+                    self.dHelper.blit(self.dHelper.BLACK, 70, ant.x, ant.y, self.scale)
                 else:
-                    dHelper.blit(dHelper.TEAL, 127, ant.x, ant.y, scale)
+                    self.dHelper.blit(self.dHelper.TEAL, 127, ant.x, ant.y, self.scale)
 
     # Global evaporation of pheromones
     def globalEvaporate(self):
         for i in range(100):
             for j in range(100):
-                if type(matrix[i][j]) == type(0.0):
-                    matrix[i][j] *= (1 - gp);
+                if type(self.matrix[i][j]) == type(0.0):
+                    self.matrix[i][j] *= (1 - self.gp);
 
     def noFood(self):
-        if initialFoodAmount > 0:
-            for i in foodAmounts:
+        if self.initialFoodAmount > 0:
+            for i in self.foodAmounts:
                 if i > 0:
                     return False
             return True
@@ -165,15 +245,19 @@ class Colony:
             return False
 
     def inc(self):
-        global iterations
-        iterations += 1
+        self.iterations += 1
+
+
+# Function to return the inverse of the distance
+def getInverseDistance(dir_):
+    if (dir_ == 0) or (dir_ == 2) or (dir_ == 4) or (dir_ == 6):
+        return 1.0  # Straight line, distance == 1
+    else:
+        return float(1 / 2 ** .5)  # Diagonal distance
 
 
 class Ant:
-    global spawnX
-    global spawnY
-
-    def __init__(self, x, y, leet):
+    def __init__(self, x, y, leet, shouldPrint):
         self.x = x
         self.y = y
         self.tabooList = []
@@ -182,30 +266,31 @@ class Ant:
         self.tabooListIndex = 0
         self.leet = leet
         self.id = r.randint(10000000, 99999999)
+        self.shouldPrint = shouldPrint
 
-    def move(self, dir):
+    def move(self, dir_):
         if [self.x, self.y] not in self.tabooList:
             self.tabooList.append([self.x, self.y])
         dx, dy = 0, 0
 
-        if dir == 0:
+        if dir_ == 0:
             dy = -1
-        if dir == 1:
+        if dir_ == 1:
             dy = -1
             dx = 1
-        if dir == 2:
+        if dir_ == 2:
             dx = 1
-        if dir == 3:
+        if dir_ == 3:
             dx = 1
             dy = 1
-        if dir == 4:
+        if dir_ == 4:
             dy = 1
-        if dir == 5:
+        if dir_ == 5:
             dy = 1
             dx = -1
-        if dir == 6:
+        if dir_ == 6:
             dx = -1
-        if dir == 7:
+        if dir_ == 7:
             dx = -1
             dy = -1
 
@@ -220,46 +305,46 @@ class Ant:
         else:
             self.l0 += 2 ** .5
 
-    def tryMove(self, dir):
-        if dir == 0:
+    def tryMove(self, dir_):
+        if dir_ == 0:
             return [self.x, self.y - 1]
-        if dir == 1:
+        if dir_ == 1:
             return [self.x + 1, self.y - 1]
-        if dir == 2:
+        if dir_ == 2:
             return [self.x + 1, self.y]
-        if dir == 3:
+        if dir_ == 3:
             return [self.x + 1, self.y + 1]
-        if dir == 4:
+        if dir_ == 4:
             return [self.x, self.y + 1]
-        if dir == 5:
+        if dir_ == 5:
             return [self.x - 1, self.y + 1]
-        if dir == 6:
+        if dir_ == 6:
             return [self.x - 1, self.y]
-        if dir == 7:
+        if dir_ == 7:
             return [self.x - 1, self.y - 1]
 
     # Get the amount of pheromones on neighboring cells
-    def getPheromone(self, dir):
+    def getPheromone(self, matrix, initPheromone, dir_):
         pheromoneX = self.x
         pheromoneY = self.y
-        if dir == 0:
+        if dir_ == 0:
             pheromoneY = self.y - 1
-        if dir == 1:
+        if dir_ == 1:
             pheromoneY = self.y - 1
             pheromoneX = self.x + 1
-        if dir == 2:
+        if dir_ == 2:
             pheromoneX = self.x + 1
-        if dir == 3:
+        if dir_ == 3:
             pheromoneX = self.x + 1
             pheromoneY = self.y + 1
-        if dir == 4:
+        if dir_ == 4:
             pheromoneY = self.y + 1
-        if dir == 5:
+        if dir_ == 5:
             pheromoneY = self.y + 1
             pheromoneX = self.x - 1
-        if dir == 6:
+        if dir_ == 6:
             pheromoneX = self.x - 1
-        if dir == 7:
+        if dir_ == 7:
             pheromoneX = self.x - 1
             pheromoneY = self.y - 1
 
@@ -268,17 +353,10 @@ class Ant:
         else:
             return initPheromone * 10000
 
-    # Function to return the inverse of the distance
-    def getInverseDistance(self, dir):
-        if (dir == 0) or (dir == 2) or (dir == 4) or (dir == 6):
-            return 1.0  # Straight line, distance == 1
-        else:
-            return float(1 / 2 ** .5)  # Diagonal distance
-
     # Determine possible moves
     possibleTurns = []
 
-    def addPossibleTurns(self, arr):
+    def addPossibleTurns(self, matrix, arr):
         self.possibleTurns = []
         for i in arr:
             pp = self.tryMove(i)
@@ -287,46 +365,51 @@ class Ant:
                 self.possibleTurns.append(i)
 
     # Resetting the ants when it's lost
-    def respawn(self):
-        self.x = spawnX
-        self.y = spawnY
+    def respawn(self, spawn):
+        self.x = spawn[0]
+        self.y = spawn[1]
         self.tabooList = []
         self.putPheromone = False
         self.tabooListIndex = 0
         self.l0 = 0
-        print("Ant: ", self.id, " respawned !")
+        if self.shouldPrint:
+            print("Ant: ", self.id, " respawned !")
 
     # Choose next point of interest and move there
-    def turn(self):
+    def turn(self, col: Colony):
         if not self.putPheromone:
 
             # Set possible directions
             if (self.x == 0) and (self.y == 0):
-                self.addPossibleTurns([2, 3, 4])
+                self.addPossibleTurns(col.getMatrix(), [2, 3, 4])
             if (self.x == 0) and (self.y == 99):
-                self.addPossibleTurns([0, 1, 2])
+                self.addPossibleTurns(col.getMatrix(), [0, 1, 2])
             if (self.x == 99) and (self.y == 0):
-                self.addPossibleTurns([4, 5, 6])
+                self.addPossibleTurns(col.getMatrix(), [4, 5, 6])
             if (self.x == 99) and (self.y == 99):
-                self.addPossibleTurns([6, 7, 0])
+                self.addPossibleTurns(col.getMatrix(), [6, 7, 0])
             if (self.x == 0) and (self.y in range(1, 99)):
-                self.addPossibleTurns([0, 1, 2, 3, 4])
+                self.addPossibleTurns(col.getMatrix(), [0, 1, 2, 3, 4])
             if (self.x == 99) and (self.y in range(1, 99)):
-                self.addPossibleTurns([0, 4, 5, 6, 7])
+                self.addPossibleTurns(col.getMatrix(), [0, 4, 5, 6, 7])
             if (self.y == 0) and (self.x in range(1, 99)):
-                self.addPossibleTurns([2, 3, 4, 5, 6])
+                self.addPossibleTurns(col.getMatrix(), [2, 3, 4, 5, 6])
             if (self.y == 99) and (self.x in range(1, 99)):
-                self.addPossibleTurns([6, 7, 0, 1, 2])
+                self.addPossibleTurns(col.getMatrix(), [6, 7, 0, 1, 2])
             if (self.x in range(1, 99)) and (self.y in range(1, 99)):
-                self.addPossibleTurns([0, 1, 2, 3, 4, 5, 6, 7])
+                self.addPossibleTurns(col.getMatrix(), [0, 1, 2, 3, 4, 5, 6, 7])
 
             # Calculate the prob of a move
             sum_ = 0
             probabilities = []
             for i in self.possibleTurns:
-                sum_ += self.getInverseDistance(i) ** beta * self.getPheromone(i) ** alpha
+                sum_ += getInverseDistance(i) ** col.getBeta() * self.getPheromone(col.getMatrix(),
+                                                                                   col.getInitPheromone(),
+                                                                                   i) ** col.getAlpha()
             for i in self.possibleTurns:
-                probabilities.append(self.getInverseDistance(i) ** beta * self.getPheromone(i) ** alpha / sum_)
+                probabilities.append(
+                    getInverseDistance(i) ** col.getBeta() * self.getPheromone(col.getMatrix(), col.getInitPheromone(),
+                                                                               i) ** col.getAlpha() / sum_)
 
             if not self.leet:
                 # Function to calculate the sum of the first elements of the array
@@ -352,7 +435,7 @@ class Ant:
                         if rand >= probRange[-1]:
                             return self.possibleTurns[-1]
                     else:
-                        self.respawn()
+                        self.respawn(col.getSpawn())
             else:
                 def selectDir():
                     if len(self.possibleTurns) > 0:
@@ -360,42 +443,46 @@ class Ant:
                         maxIndexes = [i for i, j in enumerate(probabilities) if j == maxProb]
                         return self.possibleTurns[r.choice(maxIndexes)]
                     else:
-                        self.respawn()
+                        self.respawn(col.getSpawn())
 
             newDir = selectDir()
             self.move(newDir)
 
-            if matrix[self.x][self.y] == "food":
+            if col.getMatrix()[self.x][self.y] == "food":
                 antStr = "Ant:"
                 if self.leet:
                     antStr = "Elite Ant:"
-                print(antStr, self.id, " found", "%#3d" % foodAmounts[foodList.index([self.x, self.y])],
-                      "food units at coordinate :", self.x, self.y, "in", "%#10f" % self.l0, "steps")
+                if self.shouldPrint:
+                    print(antStr, self.id, " found",
+                          "%#3d" % col.getFoodAmounts()[col.getFoodList().index([self.x, self.y])],
+                          "food units at coordinate :", self.x, self.y, "in", "%#10f" % self.l0, "steps")
                 self.putPheromone = True
 
-                if initialFoodAmount != 0:
-                    foodAmounts[foodList.index([self.x, self.y])] -= 1
-                    if foodAmounts[foodList.index([self.x, self.y])] == 0:
-                        matrix[self.x][self.y] = initPheromone
+                if col.getInitialFoodAmount() != 0:
+                    col.getFoodAmounts()[col.getFoodList().index([self.x, self.y])] -= 1
+                    if col.getFoodAmounts()[col.getFoodList().index([self.x, self.y])] == 0:
+                        col.getMatrix()[self.x][self.y] = col.getInitPheromone()
                         self.putPheromone = False
-                        print("The food at : ", self.x, self.y, " is finished but the pheromones remains.")
+                        if self.shouldPrint:
+                            print("The food at : ", self.x, self.y, " is finished but the pheromones remains.")
 
         else:  # if putFeromone
             self.tabooListIndex += 1
             self.x = self.tabooList[-self.tabooListIndex][0]
             self.y = self.tabooList[-self.tabooListIndex][1]
 
-            if type(matrix[self.x][self.y]) == type(0.0):
-                newTau = (1 - p) * matrix[self.x][self.y] + q / self.l0
-                matrix[self.x][self.y] = newTau
+            if type(col.getMatrix()[self.x][self.y]) == type(0.0):
+                newTau = (1 - col.getP()) * col.getMatrix()[self.x][self.y] + col.getQ() / self.l0
+                col.getMatrix()[self.x][self.y] = newTau
 
-            if matrix[self.x][self.y] == "spawn":
-                self.respawn()
+            if col.getMatrix()[self.x][self.y] == "spawn":
+                self.respawn(col.getSpawn())
         return
 
 
 def main():
-    ant_colony = Colony()
+    shouldPrint = True
+    ant_colony = Colony(shouldPrint)
     ant_colony.initField()
     ant_colony.createAnts()
 
@@ -407,11 +494,13 @@ def main():
         ant_colony.drawField()
         ant_colony.drawAndMoveAnts()
         pg.display.flip()
-        clock.tick()
+        ant_colony.getClock().tick()
         ant_colony.globalEvaporate()
         ant_colony.inc()
         if ant_colony.noFood():
-            print("Ants have eaten all the food in : ", iterations, "iterations.")
+            if shouldPrint:
+                print("Ants have eaten all the food in : ", ant_colony.getIterations(), "iterations.")
+            running = False
     pg.quit()
 
 
