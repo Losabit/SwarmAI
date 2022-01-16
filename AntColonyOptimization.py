@@ -22,7 +22,7 @@ class Colony:
         # Food Variables
         self.foodList = []
         self.foodAmounts = []
-        self.initialFoodAmount = 1
+        self.initialFoodAmount = 10
 
         # Number of obstacles
         self.numObstacles = 4000
@@ -112,7 +112,7 @@ class Colony:
 
         for i in range(self.numObstacles):
             putObstacleSuccess = 0
-            while putObstacleSuccess < self.numFood + 1:  # количество еды + точка спавна
+            while putObstacleSuccess < self.numFood + 1:
                 obstacleX = r.randint(0, 99)
                 obstacleY = r.randint(0, 99)
                 if not ((self.matrix[obstacleX][obstacleY] == "obstacle") and (
