@@ -2,6 +2,37 @@ import pygame as pg
 import random as r
 from DrawerHelper import *
 
+scale = 6
+
+numAnts = 1000  # Number of Ants
+eliteAntsPercentage = 5  # Percentage of elite Ants
+initPheromone = 1.0  # Pheromone init value
+
+# Food Variables
+foodList = []
+numFood = 4  # Amount of food
+minFoodDistance = 20
+maxFoodDistance = 100
+foodAmounts = []
+initialFoodAmount = 4
+
+# Number of obstacles
+numObstacles = 4000
+freeSpace = 3  # Free space left around food & spawn
+
+# Algorith parameters
+alpha = 3  # Impact of pheromones
+beta = 3  # Impact of the distance
+q = 100  # Multiplier of the distance traveled
+p = 0.0003  # local evaporation rate of pheromones
+gp = 0.0007  # global evaporation rate of pheromones
+
+dHelper = DrawerHelper("AntColonyOptimization Example", int(100 * scale), int(100 * scale))
+clock = pg.time.Clock()
+ants = []
+matrix = []
+spawnX, spawnY = 0, 0
+iterations = 0
 
 class Colony:
 
