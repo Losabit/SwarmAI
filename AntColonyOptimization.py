@@ -10,11 +10,11 @@ initPheromone = 1.0  # Pheromone init value
 
 # Food Variables
 foodList = []
-numFood = 1  # Amount of food
+numFood = 4  # Amount of food
 minFoodDistance = 20
 maxFoodDistance = 100
 foodAmounts = []
-initialFoodAmount = 1
+initialFoodAmount = 4
 
 # Number of obstacles
 numObstacles = 4000
